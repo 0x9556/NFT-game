@@ -8,6 +8,15 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
 contract MyNftGame is ERC721 {
+    event CreatCharacter(address indexed addr, uint indexed characterIndex);
+    event AttackComplete(
+        address indexed addr,
+        uint characterIndex,
+        uint indexed characterHp,
+        uint bossIndex,
+        uint indexed bossHp
+    );
+
     using Counters for Counters.Counter;
 
     struct CharacterAttributes {
@@ -28,8 +37,8 @@ contract MyNftGame is ERC721 {
         uint attackDamage;
     }
 
-    CharacterAttributes[] defaultChracterAttributes;
-    BossAttributes[] defaultBossAttributes;
+    CharacterAttributes[] defaultCharacters;
+    BossAttributes[] defaultBosses;
     BossAttributes private boss;
     Counters.Counter private _tokenId;
 
@@ -48,7 +57,7 @@ contract MyNftGame is ERC721 {
     ) ERC721("Heroes", "Hero") {
         uint i;
         for (i = 0; i < characterNames.length; ) {
-            defaultChracterAttributes.push(
+            defaultCharacters.push(
                 CharacterAttributes({
                     characterIndex: i,
                     name: characterNames[i],
@@ -58,15 +67,15 @@ contract MyNftGame is ERC721 {
                     attackDamage: characterAttackDmg[i]
                 })
             );
-            CharacterAttributes memory demo = defaultChracterAttributes[i];
-            console.log(
-                "Done initializing %s w/ HP %s, img %s",
-                demo.name,
-                demo.hp,
-                demo.imgURI
-            );
+            // CharacterAttributes memory demo = defaultCharacters[i];
+            // console.log(
+            //     "Done initializing %s w/ HP %s, img %s",
+            //     demo.name,
+            //     demo.hp,
+            //     demo.imgURI
+            // );
 
-            defaultBossAttributes.push(
+            defaultBosses.push(
                 BossAttributes({
                     bossIndex: i,
                     name: bossNames[i],
@@ -76,13 +85,13 @@ contract MyNftGame is ERC721 {
                     attackDamage: bossAttackDmg[i]
                 })
             );
-            BossAttributes memory demo2 = defaultBossAttributes[i];
-            console.log(
-                "Done initializing %s w/ HP %s, img %s",
-                demo2.name,
-                demo2.hp,
-                demo2.imgURI
-            );
+            // BossAttributes memory demo2 = defaultBosses[i];
+            // console.log(
+            //     "Done initializing %s w/ HP %s, img %s",
+            //     demo2.name,
+            //     demo2.hp,
+            //     demo2.imgURI
+            // );
 
             unchecked {
                 i += 1;
@@ -99,7 +108,7 @@ contract MyNftGame is ERC721 {
                 3;
         }
 
-        boss = defaultBossAttributes[index];
+        boss = defaultBosses[index];
         console.log(boss.name);
     }
 
@@ -109,18 +118,17 @@ contract MyNftGame is ERC721 {
         ntfOwned[msg.sender].push(newId);
         nftAttributes[newId] = CharacterAttributes({
             characterIndex: _characterIndex,
-            name: defaultChracterAttributes[_characterIndex].name,
-            imgURI: defaultChracterAttributes[_characterIndex].imgURI,
-            hp: defaultChracterAttributes[_characterIndex].hp,
-            maxHp: defaultChracterAttributes[_characterIndex].maxHp,
-            attackDamage: defaultChracterAttributes[_characterIndex]
-                .attackDamage
+            name: defaultCharacters[_characterIndex].name,
+            imgURI: defaultCharacters[_characterIndex].imgURI,
+            hp: defaultCharacters[_characterIndex].hp,
+            maxHp: defaultCharacters[_characterIndex].maxHp,
+            attackDamage: defaultCharacters[_characterIndex].attackDamage
         });
-        console.log(
-            "Minted NFT w/ tokenId %s and characterIndex %s",
-            newId,
-            _characterIndex
-        );
+        // console.log(
+        //     "Minted NFT w/ tokenId %s and characterIndex %s",
+        //     newId,
+        //     _characterIndex
+        // );
         _tokenId.increment();
     }
 
@@ -141,17 +149,42 @@ contract MyNftGame is ERC721 {
             ? 0
             : currentCharacter.hp - boss.attackDamage;
 
-        console.log("Player attacked boss. New boss hp: %s", boss.hp);
-        console.log(
-            "Boss attacked player. New player hp: %s\n",
-            currentCharacter.hp
+        emit AttackComplete(
+            msg.sender,
+            currentCharacter.characterIndex,
+            currentCharacter.hp,
+            boss.bossIndex,
+            boss.hp
         );
+        // console.log("Player attacked boss. New boss hp: %s", boss.hp);
+        // console.log(
+        //     "Boss attacked player. New player hp: %s\n",
+        //     currentCharacter.hp
+        // );
     }
 
     function creatCharacter(uint _characterIndex) external {
-        uint[] storage nfts = ntfOwned[msg.sender];
-        require(nfts.length == 0, "Already created");
+        require(!checkIfUserHasNft(), "Already created");
         mintCharacterNft(_characterIndex);
+        emit CreatCharacter(msg.sender, _characterIndex);
+    }
+
+    function checkIfUserHasNft() public view returns (bool) {
+        uint[] storage nfts = ntfOwned[msg.sender];
+        uint nftCounts = nfts.length;
+        return nftCounts != 0;
+    }
+
+    function getAllDefaultCharacters()
+        public
+        view
+        returns (CharacterAttributes[] memory)
+    {
+        return defaultCharacters;
+    }
+
+    function getCurrentBoss() external view returns (BossAttributes memory) {
+        return boss;
     }
 
     function tokenURI(

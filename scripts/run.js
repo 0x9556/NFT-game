@@ -57,16 +57,8 @@ async function main() {
   await tx.wait()
   tx = await contract.attackBoss(0)
   await tx.wait()
-  tx = await contract.attackBoss(0)
-  await tx.wait()
-  tx = await contract.attackBoss(0)
-  await tx.wait()
-  tx = await contract.attackBoss(0)
-  await tx.wait()
-  tx = await contract.attackBoss(0)
-  await tx.wait()
-
-
+  tx = await contract.checkIfUserHasNft()
+  console.log(tx)
 
 }
 

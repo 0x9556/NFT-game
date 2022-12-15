@@ -62,11 +62,11 @@ async function main() {
 
 }
 
-// deploy().catch(error => {
-//   console.log(error)
-//   process.exit(1)
-// })
-main().catch(error => {
+deploy().catch(error => {
   console.log(error)
   process.exit(1)
 })
+// main().catch(error => {
+//   console.log(error)
+//   process.exit(1)
+// })

@@ -12,6 +12,7 @@ export default function Root() {
 
   useEffect(() => {
     dispatch(checkIfWalletConnectAction())
+
   }, [dispatch])
 
 

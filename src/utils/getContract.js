@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
-import { ABI, CONRACT_ADDRESS } from './constants'
+import { CONRACT_ADDRESS, ABI } from './constants'
 
-export async function getContract() {
+export function getContract() {
     const contractAddress = CONRACT_ADDRESS
     const contractAbi = ABI
     const provider = new ethers.providers.Web3Provider(window.ethereum)

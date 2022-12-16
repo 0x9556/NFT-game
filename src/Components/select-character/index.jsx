@@ -1,18 +1,18 @@
-import React, { memo, useEffect, useState } from 'react'
-import { ethers } from 'ethers'
-import { ABI, CONRACT_ADDRESS } from '../../utils/constants'
-import { formatCharacterData } from '../../utils/formatCharacterData'
+import React, { useEffect } from 'react'
+import { useSelector, useDispatch, shallowEqual } from 'react-redux'
+import { fetchCharactersAction } from '../../store'
+import Profile from '../profile'
 import { SelectCharacterWarapper } from './style'
 
-const SelectCharacter = memo(({ account, setCharacters }) => {
-    const [defaultCharacter, setDefaultCharacter] = useState()
+const SelectCharacter = () => {
+
+    const account = useSelector(state => state.account)
+    const defaultCharacters = useSelector(state => state.defaultCharacters, shallowEqual)
+    const dispatch = useDispatch()
 
     useEffect(() => {
         checkNetwork()
-    }, [])
-
-    useEffect(() => {
-        fetchNftData()
+        dispatch(fetchCharactersAction())
     }, [account])
 
     const checkNetwork = () => {
@@ -20,36 +20,17 @@ const SelectCharacter = memo(({ account, setCharacters }) => {
             console.log("please connect to test network")
     }
 
-    const fetchNftData = async () => {
-        const contract = await getContract()
-        const ifUserHasNft = await contract.checkIfUserHasNft()
-        if (!ifUserHasNft) {
-            const CharactersMeta = await contract.getAllDefaultCharacters()
-            const defaultCharacterData = CharactersMeta.map(item => formatCharacterData(item))
-            setDefaultCharacter(defaultCharacterData)
-            console.log(defaultCharacterData)
-        } else {
-            const characters = await contract.getcharacters()
-            setCharacters(characters)
-        }
-
-    }
-
-    const getContract = async () => {
-        const contractAddress = CONRACT_ADDRESS
-        const contractAbi = ABI
-        const provider = new ethers.providers.Web3Provider(window.ethereum)
-        const signer = provider.getSigner()
-        return new ethers.Contract(contractAddress, contractAbi, signer)
-    }
-
     return (
         <SelectCharacterWarapper>
             <div className="select-character-container">
                 <h2>Mint Your Hero. Choose wisely.</h2>
+                {
+                    defaultCharacters.map((item, index) =>
+                        <Profile info={item} key={index} />)
+                }
             </div>
         </SelectCharacterWarapper>
     )
-})
+}
 
 export default SelectCharacter

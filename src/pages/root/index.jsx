@@ -1,39 +1,26 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
+import { shallowEqual, useDispatch, useSelector } from 'react-redux'
+import { checkIfWalletConnectAction } from '../../store'
 import { RootWrapper } from './style'
 import ConnectWallet from '../../Components/connect-wallet'
 import SelectCharacter from '../../Components/select-character'
 export default function Root() {
 
-  const [account, setAccount] = useState(null)
-  const [characters, setCharacters] = useState([])
+  const account = useSelector(state => state.account)
+  const characters = useSelector(state => state.characters, shallowEqual)
+  const dispatch = useDispatch()
 
   useEffect(() => {
-    checkIfWalletConnect()
-  }, [])
+    dispatch(checkIfWalletConnectAction())
+  }, [dispatch])
 
-  const checkIfWalletConnect = async () => {
-    try {
-      const { ethereum } = window
-      if (!ethereum) {
-        console.log("Go get metamask")
-        return
-      }
-      const accounts = await ethereum.request({
-        method: "eth_accounts"
-      })
-      if (accounts)
-        setAccount(accounts[0])
-    } catch (error) {
-      console.log(error)
-    }
-  }
 
   const renderContent = () => {
     if (!account)
-      return <ConnectWallet setAccount={setAccount} />
+      return <ConnectWallet />
 
     if (account && !characters.length)
-      return <SelectCharacter setcharacterNFT={setCharacters} account={account} />
+      return <SelectCharacter />
   }
 
 

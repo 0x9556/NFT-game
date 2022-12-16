@@ -187,20 +187,9 @@ contract MyNftGame is ERC721 {
         return boss;
     }
 
-    // function getCharacters()
-    //     external
-    //     view
-    //     returns (CharacterAttributes[] memory)
-    // {
-    //     uint[] memory nfts = ntfOwned[msg.sender];
-    //     CharacterAttributes[] memory characters;
-    //     if (nfts.length != 0) {
-    //         for (uint i = 0; i < nfts.length; i++) {
-    //             CharacterAttributes memory character = nftAttributes[nfts[i]];
-    //             characters.push(character);
-    //         }
-    //     }
-    // }
+    function getCharacters() external view returns (uint[] memory) {
+        return ntfOwned[msg.sender];
+    }
 
     function tokenURI(
         uint __tokenId

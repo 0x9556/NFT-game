@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
 contract MyNftGame is ERC721 {
-    event CreatCharacter(address indexed addr, uint indexed characterIndex);
+    event CreateCharacter(address indexed addr, uint indexed characterIndex);
     event AttackComplete(
         address indexed addr,
         uint characterIndex,
@@ -163,10 +163,10 @@ contract MyNftGame is ERC721 {
         // );
     }
 
-    function creatCharacter(uint _characterIndex) external {
+    function createCharacter(uint _characterIndex) external {
         require(!checkIfUserHasNft(), "Already created");
         mintCharacterNft(_characterIndex);
-        emit CreatCharacter(msg.sender, _characterIndex);
+        emit CreateCharacter(msg.sender, _characterIndex);
     }
 
     function checkIfUserHasNft() public view returns (bool) {

@@ -6,7 +6,7 @@ const Profile = memo(({ info }) => {
 
     const mintCharacterNFTAction = async (index) => {
         const contract = getContract()
-        let tx = await contract.creatCharacter(index)
+        let tx = await contract.createCharacter(index)
         await tx.wait()
     }
     

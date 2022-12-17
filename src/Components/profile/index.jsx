@@ -1,15 +1,19 @@
 import React, { memo } from 'react'
-import { getContract } from '../../utils/getContract'
+import { useContract } from '../../hooks/useContract'
 import { ProfileWrapper } from './style'
 const Profile = memo(({ info }) => {
 
+    const contract = useContract()
 
-    const mintCharacterNFTAction = async (index) => {
-        const contract = getContract()
-        let tx = await contract.createCharacter(index)
-        await tx.wait()
+    const mintCharacterNFT = async (index) => {
+        try {
+            console.log(contract)
+            let tx = await contract.createCharacter(index)
+            await tx.wait()
+        } catch (error) {
+            console.log(error)
+        }
     }
-    
 
     return (
         <ProfileWrapper>
@@ -21,7 +25,7 @@ const Profile = memo(({ info }) => {
                 <button
                     type="button"
                     className="character-mint-button"
-                    onClick={()=>{mintCharacterNFTAction(info.characterIndex)}}
+                    onClick={() => mintCharacterNFT(info.characterIndex)}
                 >{`Mint ${info.name}`}</button>
             </div>
         </ProfileWrapper>

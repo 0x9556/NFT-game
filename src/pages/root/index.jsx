@@ -1,29 +1,52 @@
 import React, { useEffect } from 'react'
-import { shallowEqual, useDispatch, useSelector } from 'react-redux'
-import { checkIfWalletConnectAction } from '../../store'
+import { useDispatch, useSelector } from 'react-redux'
+import { setCurrentAccount, setIfuserHasNft } from '../../store'
 import { RootWrapper } from './style'
 import ConnectWallet from '../../Components/connect-wallet'
 import SelectCharacter from '../../Components/select-character'
+import { useContract } from '../../hooks/useContract'
+import { ethers } from 'ethers'
+
 export default function Root() {
 
-  const account = useSelector(state => state.account)
-  const characters = useSelector(state => state.characters, shallowEqual)
+  const currentAccount = useSelector(state => state.currentAccount)
+  const userHasNft = useSelector(state => state.ifUserHasNft)
   const dispatch = useDispatch()
+  const contract = useContract()
 
   useEffect(() => {
-    dispatch(checkIfWalletConnectAction())
+    const checkIfWalletConnect = async () => {
+      const { ethereum } = window
+      if (ethereum) {
+        const currentAccount = await ethereum.request({
+          method: "eth_accounts"
+        })
+        if (currentAccount.length !== 0)
+          dispatch(setCurrentAccount(currentAccount[0]))
+      }
+    }
+    checkIfWalletConnect()
+  }, [])
 
-  }, [dispatch])
+  useEffect(() => {
+    const checkIfUserHasNft = async () => {
+      if (currentAccount) {
+        const ifHasNft = await contract.checkIfUserHasNft(currentAccount)
+        dispatch(setIfuserHasNft(ifHasNft))
+      }
+    }
+    checkIfUserHasNft()
+  }, [currentAccount])
+
 
 
   const renderContent = () => {
-    if (!account)
+    if (!currentAccount)
       return <ConnectWallet />
 
-    if (account && !characters.length)
+    if (currentAccount && !userHasNft)
       return <SelectCharacter />
   }
-
 
   return (
     <RootWrapper>
@@ -39,3 +62,5 @@ export default function Root() {
     </RootWrapper>
   )
 }
+
+

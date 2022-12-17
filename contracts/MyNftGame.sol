@@ -164,13 +164,13 @@ contract MyNftGame is ERC721 {
     }
 
     function createCharacter(uint _characterIndex) external {
-        require(!checkIfUserHasNft(), "Already created");
+        require(!checkIfUserHasNft(msg.sender), "Already created");
         mintCharacterNft(_characterIndex);
         emit CreateCharacter(msg.sender, _characterIndex);
     }
 
-    function checkIfUserHasNft() public view returns (bool) {
-        uint[] storage nfts = ntfOwned[msg.sender];
+    function checkIfUserHasNft(address account) public view returns (bool) {
+        uint[] storage nfts = ntfOwned[account];
         uint nftCounts = nfts.length;
         return nftCounts != 0;
     }

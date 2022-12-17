@@ -1,54 +1,90 @@
-import React, { useEffect } from 'react'
-import { useSelector, useDispatch, shallowEqual } from 'react-redux'
-import { useDefaultCharacters } from '../../hooks/useCharacters'
-import { fetchCharactersAction } from '../../store'
+import React, { useEffect, memo } from 'react'
+import { shallowEqual, useDispatch, useSelector } from 'react-redux'
+import { setDefaultCharacters, setuserCharacters, setIfuserHasNft } from '../../store'
+import { formatCharacterData } from '../../utils/formatCharacterData'
+import { useContract } from '../../hooks/useContract'
 import { SelectCharacterWarapper } from './style'
 import Profile from '../profile'
 
+
 const SelectCharacter = () => {
 
-
-    const account = useSelector(state => state.account)
+    const contract = useContract()
     const dispatch = useDispatch()
-    const defaultCharacters = useDefaultCharacters()
+    const ifUserHasNft = useSelector(state => state.ifUserHasNft)
+    const currentAccount = useSelector(state => state.currentAccount)
+    const defaultCharacters = useSelector(state => state.defaultCharacters, shallowEqual)
+    const userCharacters = useSelector(state => state.userCharacters, shallowEqual)
 
     useEffect(() => {
-        checkNetwork()
-        dispatch(fetchCharactersAction())
-    }, [account])
+        const networkVersion = window.ethereum.networkVersion
+        if (networkVersion !== "31337")
+            console.log("please connect to local network")
+    }, [])
 
-    // useEffect(() => {
-    //     const contract = getContract()
-    //     contract.on("CreateCharacter", onCharacterMint)
-    //     return () => {
-    //         contract.off("CreateCharacter", onCharacterMint)
-    //     }
-    // }, [])
+    useEffect(() => {
+        const getDefaultCharacters = async () => {
+            const defaultCharactersMeta = await contract.getAllDefaultCharacters()
+            dispatch(setDefaultCharacters(defaultCharactersMeta.map(item => formatCharacterData(item))))
+        }
+        getDefaultCharacters()
+    }, [])
 
-    const checkNetwork = () => {
-        if (window.ethereum.networkVersion !== "31337")
-            console.log("please connect to test network")
+    useEffect(() => {
+        const getUserCharacters = async () => {
+            const indices =await contract.getCharacters()
+            console.log(indices)
+            const charactersMeta = indices.map(async (index) => {
+                return await contract.nftAttributes(index)
+            })
+            console.log(charactersMeta)
+            dispatch(setuserCharacters(charactersMeta.map(item => formatCharacterData(item))))
+        }
+        getUserCharacters()
+    }, [currentAccount, ifUserHasNft])
+
+
+    useEffect(() => {
+        contract.on("CreateCharacter", onCharacterMint)
+        return () => {
+            contract.off("CreateCharacter", onCharacterMint)
+        }
+    }, [])
+
+
+    const onCharacterMint = (sender, characterIndex) => {
+        console.log(
+            `CharacterNFTMinted - sender: ${sender}  characterIndex: ${characterIndex.toNumber()}`
+        )
+        if (currentAccount === sender)
+            dispatch(setIfuserHasNft(true))
     }
 
-    // const onCharacterMint = (sender, characterIndex) => {
-    //     console.log(
-    //         `CharacterNFTMinted - sender: ${sender}  characterIndex: ${characterIndex.toNumber()}`
-    //     )
-    // }
 
     const renderDefaultCharacters = () => {
-        if (defaultCharacters.length !== 0) {
-            defaultCharacters.map((item, index) =>
+        if (!ifUserHasNft) {
+            return defaultCharacters.map((item, index) =>
                 <Profile info={item} key={index} />)
         }
     }
+
+    const renderUserCharacters = () => {
+        userCharacters.map((item, index) =>
+            <Profile info={item} key={index} />)
+    }
+
+
 
     return (
         <SelectCharacterWarapper>
             <div className="select-character-container">
                 <h2>Mint Your Hero. Choose wisely.</h2>
                 <div className="character-grid">
-                    {renderDefaultCharacters()}
+                    {
+                        ifUserHasNft ?
+                            renderUserCharacters() :
+                            renderDefaultCharacters()
+                    }
                 </div>
 
             </div>
@@ -56,4 +92,5 @@ const SelectCharacter = () => {
     )
 }
 
-export default SelectCharacter
+
+export default memo(SelectCharacter)

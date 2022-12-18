@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setCurrentAccount, setIfuserHasNft } from '../../store'
 import { RootWrapper } from './style'
 import { useContract } from '../../hooks/useContract'
+import LoadingIndicator from '../../Components/loadingIndicator'
 import ConnectWallet from '../../Components/connect-wallet'
 import SelectCharacter from '../../Components/select-character'
 import Arena from '../../Components/arena'
@@ -13,6 +14,7 @@ export default function Root() {
   const userHasNft = useSelector(state => state.ifUserHasNft)
   const dispatch = useDispatch()
   const contract = useContract()
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const checkIfWalletConnect = async () => {
@@ -23,8 +25,10 @@ export default function Root() {
         })
         if (currentAccount.length !== 0)
           dispatch(setCurrentAccount(currentAccount[0]))
+        setIsLoading(false)
       }
     }
+    setIsLoading(true)
     checkIfWalletConnect()
   }, [])
 
@@ -39,14 +43,16 @@ export default function Root() {
   }, [currentAccount])
 
   const renderContent = () => {
+    if (isLoading)
+      <LoadingIndicator />
     if (!currentAccount)
       return <ConnectWallet />
 
     if (currentAccount && !userHasNft)
       return <SelectCharacter />
-    
+
     if (currentAccount && userHasNft)
-      return <Arena/>
+      return <Arena />
   }
 
   return (

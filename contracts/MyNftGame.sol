@@ -132,10 +132,8 @@ contract MyNftGame is ERC721 {
         _tokenId.increment();
     }
 
-    function attackBoss(uint8 index) external {
-        uint[] memory characters = ntfOwned[msg.sender];
-        require(characters.length > index, "error");
-        uint tokenId = characters[index];
+    function attackBoss(uint tokenId) external {
+        require(checkIfUserHasExactNft(tokenId), "not owned");
         CharacterAttributes storage currentCharacter = nftAttributes[tokenId];
         require(currentCharacter.hp > 0, "character must have HP");
         require(boss.hp > 0, "boss must have HP");
@@ -173,6 +171,14 @@ contract MyNftGame is ERC721 {
         uint[] storage nfts = ntfOwned[account];
         uint nftCounts = nfts.length;
         return nftCounts != 0;
+    }
+
+    function checkIfUserHasExactNft(uint tokenId) public view returns (bool) {
+        uint[] memory tokenIds = ntfOwned[msg.sender];
+        for (uint i = 0; i < tokenIds.length; i++) {
+            if (tokenIds[i] == tokenId) return true;
+        }
+        return false;
     }
 
     function getAllDefaultCharacters()

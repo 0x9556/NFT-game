@@ -1,17 +1,22 @@
-import React, { memo, useEffect } from 'react'
+import React, { memo, useEffect, useState } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux'
 import { setCurrentBoss, setCurrentCharacterIndex } from '../../store'
 import { useContract } from '../../hooks/useContract'
-import { formateBossData } from '../../utils/formatCharacterData'
+import { formateBossData, formatCharacterData } from '../../utils/formatCharacterData'
 import { ArenaWrapper } from './style'
+import LoadingIndicator from '../loadingIndicator'
+
 
 const Arena = memo(() => {
 
   const contract = useContract()
   const dispatch = useDispatch()
+  const [attackState, setAttackState] = useState("fulfilled")
   const currentCharacterIndex = useSelector(state => state.currentCharacterIndex)
+  const currentAccount = useSelector(state => state.currentAccount)
   const userCharacters = useSelector(state => state.userCharacters, shallowEqual)
   const currentBoss = useSelector(state => state.currentBoss, shallowEqual)
+  // const [showToast, setShowToast] = useState(false)
   useEffect(() => {
     const fetchBoss = async () => {
       const currentBossMeta = await contract.getCurrentBoss()
@@ -19,7 +24,7 @@ const Arena = memo(() => {
       dispatch(setCurrentBoss(currentBoss))
     }
     fetchBoss()
-  }, [contract])
+  }, [attackState])
 
   useEffect(() => {
     contract.on("AttackComplete", onAttackComplete)
@@ -29,19 +34,42 @@ const Arena = memo(() => {
   }, [])
 
   const attack = async () => {
-    let tx = await contract.attackBoss(currentCharacterIndex)
-    await tx.wait()
+    try {
+      if (currentCharacterIndex) {
+        setAttackState("pending")
+        let tx = await contract.attackBoss(currentCharacterIndex)
+        await tx.wait()
+        setAttackState("fulfilled")
+      } else {
+        alert("please select a character")
+      }
+    } catch (error) {
+      setAttackState("rejected")
+      console.warn(error)
+    }
+
   }
 
-  const onAttackComplete = (addr, characterIndex, characterHp, bossIndex, bossHp) => {
-    console.log(addr, characterIndex, characterHp, characterIndex, bossIndex, bossHp)
+  const onAttackComplete = (from, characterIndex, newcharacterHp, bossIndex, newbossHp) => {
+    const bossHp = newbossHp.toNumber();
+    const playerHp = newcharacterHp.toNumber();
+    const sender = from.toString();
+
+    if (currentAccount === sender.toLowerCase()) {
+      setAttackState("edle")
+      console.log(`AttackComplete: Boss Hp: ${bossHp} Player Hp: ${playerHp}`)
+    }
   }
 
   return (
-
     userCharacters &&
     <ArenaWrapper>
       <div className="arena-container">
+        {/* {currentBoss && userCharacters && (
+          <div id="toast" className={showToast ? 'show' : ''}>
+            <div id="desc">{`💥 ${currentBoss.name} was hit for ${null}!`}</div>
+          </div>
+        )} */}
         {currentBoss && (
           <div className="boss-container">
             <div className={`boss-content`}>
@@ -59,12 +87,21 @@ const Arena = memo(() => {
                 {`💥 Attack ${currentBoss.name}`}
               </button>
             </div>
+            {attackState === 'pending' && (
+              <div className="loading-indicator">
+                <LoadingIndicator />
+                <p>Attacking ⚔️</p>
+              </div>
+            )}
           </div>
         )}
 
         {
-          userCharacters.map((character, index) =>
-            <SelectCharacter userCharacter={character} index={index} key={index} />
+          userCharacters.map(characterTokenId =>
+            <SelectCharacter
+              characterTokenId={characterTokenId}
+              attackState={attackState}
+              key={characterTokenId} />
           )
         }
 
@@ -73,27 +110,39 @@ const Arena = memo(() => {
   )
 })
 
-const SelectCharacter = memo(({ userCharacter, index }) => {
+const SelectCharacter = memo(({ characterTokenId ,attackState}) => {
+
+  const contract = useContract()
   const dispatch = useDispatch()
+  const [characterAttibutes, setCharacterAttibutes] = useState(undefined)
+  useEffect(() => {
+    const fetchCharacterAttributes = async () => {
+      const characterAttibutes = await contract.nftAttributes(characterTokenId)
+      setCharacterAttibutes(formatCharacterData(characterAttibutes))
+    }
+    fetchCharacterAttributes()
+  }, [attackState])
+
   return (
+    characterAttibutes &&
     <div className="players-container">
       <div className="player-container">
         <h2>Your Character</h2>
         <div className="player">
           <div className="image-content">
-            <h2>{userCharacter.name}</h2>
+            <h2>{characterAttibutes.name}</h2>
             <img
-              src={userCharacter.imgURI}
-              alt={`Character ${userCharacter.name}`}
-              onClick={() => { dispatch(setCurrentCharacterIndex(index)) }}
+              src={characterAttibutes.imgURI}
+              alt={`Character ${characterAttibutes.name}`}
+              onClick={() => { dispatch(setCurrentCharacterIndex(characterTokenId)) }}
             />
             <div className="health-bar">
-              <progress value={userCharacter.hp} max={userCharacter.maxHp} />
-              <p>{`${userCharacter.hp} / ${userCharacter.maxHp} HP`}</p>
+              <progress value={characterAttibutes.hp} max={characterAttibutes.maxHp} />
+              <p>{`${characterAttibutes.hp} / ${characterAttibutes.maxHp} HP`}</p>
             </div>
           </div>
           <div className="stats">
-            <h4>{`⚔️ Attack Damage: ${userCharacter.attackDamage}`}</h4>
+            <h4>{`⚔️ Attack Damage: ${characterAttibutes.attackDamage}`}</h4>
           </div>
         </div>
       </div>

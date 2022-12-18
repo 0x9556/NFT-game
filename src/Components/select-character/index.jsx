@@ -1,4 +1,4 @@
-import React, { useEffect, memo } from 'react'
+import React, { useEffect, memo, useState } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux'
 import { setDefaultCharacters, setuserCharacters, setIfuserHasNft } from '../../store'
 import { formatCharacterData } from '../../utils/formatCharacterData'
@@ -14,6 +14,7 @@ const SelectCharacter = () => {
     const ifUserHasNft = useSelector(state => state.ifUserHasNft)
     const currentAccount = useSelector(state => state.currentAccount)
     const defaultCharacters = useSelector(state => state.defaultCharacters, shallowEqual)
+    
 
     useEffect(() => {
         const networkVersion = window.ethereum.networkVersion
@@ -32,12 +33,13 @@ const SelectCharacter = () => {
     useEffect(() => {
         const getUserCharacters = async () => {
             const indices = await contract.getCharacters()
-            const charactersMeta = await Promise.allSettled(
-                indices.map(async (index) =>
-                    await contract.nftAttributes(index)
-                )
-            )
-            dispatch(setuserCharacters(charactersMeta.map(item => formatCharacterData(item.value))))
+            // const charactersMeta = await Promise.allSettled(
+            //     indices.map(async (index) =>
+            //         await contract.nftAttributes(index)
+            //     )
+            // )
+            // dispatch(setuserCharacters(charactersMeta.map(item => formatCharacterData(item.value))))
+            dispatch(setuserCharacters(indices.map(index => index.toNumber())))
         }
         getUserCharacters()
     }, [currentAccount, ifUserHasNft])
@@ -52,11 +54,12 @@ const SelectCharacter = () => {
 
 
     const onCharacterMint = (sender, characterIndex) => {
-        console.log(
-            `CharacterNFTMinted - sender: ${sender}  characterIndex: ${characterIndex.toNumber()}`
-        )
-        if (currentAccount === sender)
+        if (currentAccount === sender.toLowerCase()) {
             dispatch(setIfuserHasNft(true))
+            console.log(
+                `CharacterNFTMinted - sender: ${sender}  characterIndex: ${characterIndex.toNumber()}`
+            )
+        }
     }
 
     return (

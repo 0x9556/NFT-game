@@ -1,18 +1,20 @@
-import React, { memo, useEffect } from 'react'
+import React, { memo, useState } from 'react'
 import { useContract } from '../../hooks/useContract'
 import { ProfileWrapper } from './style'
 const Profile = memo(({ info }) => {
 
     const contract = useContract()
+    const [mintingCharacter, setMintingCharacter] = useState(false)
 
     const mintCharacterNFT = async (index) => {
         try {
-            console.log(contract)
+            setMintingCharacter(true)
             let tx = await contract.createCharacter(index)
             await tx.wait()
-            console.log(tx)
+            setMintingCharacter(false)
         } catch (error) {
-            console.log(error)
+            console.warn(error)
+            setMintingCharacter(false)
         }
     }
 

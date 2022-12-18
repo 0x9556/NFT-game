@@ -2,10 +2,10 @@ import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setCurrentAccount, setIfuserHasNft } from '../../store'
 import { RootWrapper } from './style'
+import { useContract } from '../../hooks/useContract'
 import ConnectWallet from '../../Components/connect-wallet'
 import SelectCharacter from '../../Components/select-character'
-import { useContract } from '../../hooks/useContract'
-import { ethers } from 'ethers'
+import Arena from '../../Components/arena'
 
 export default function Root() {
 
@@ -38,14 +38,15 @@ export default function Root() {
     checkIfUserHasNft()
   }, [currentAccount])
 
-
-
   const renderContent = () => {
     if (!currentAccount)
       return <ConnectWallet />
 
     if (currentAccount && !userHasNft)
       return <SelectCharacter />
+    
+    if (currentAccount && userHasNft)
+      return <Arena/>
   }
 
   return (

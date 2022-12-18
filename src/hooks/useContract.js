@@ -7,5 +7,7 @@ import { abi } from '../utils/MyNftGame.json'
 export function useContract() {
     const provider = useWeb3Provider()
     const signer = provider.getSigner()
-    return getContract(CONTRACT_ADDRESS, abi, provider, signer)
+    return useMemo(() => {
+        return getContract(CONTRACT_ADDRESS, abi, provider, signer)
+    }, [provider])
 }

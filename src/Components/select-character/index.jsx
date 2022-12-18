@@ -14,7 +14,6 @@ const SelectCharacter = () => {
     const ifUserHasNft = useSelector(state => state.ifUserHasNft)
     const currentAccount = useSelector(state => state.currentAccount)
     const defaultCharacters = useSelector(state => state.defaultCharacters, shallowEqual)
-    const userCharacters = useSelector(state => state.userCharacters, shallowEqual)
 
     useEffect(() => {
         const networkVersion = window.ethereum.networkVersion
@@ -32,13 +31,13 @@ const SelectCharacter = () => {
 
     useEffect(() => {
         const getUserCharacters = async () => {
-            const indices =await contract.getCharacters()
-            console.log(indices)
-            const charactersMeta = indices.map(async (index) => {
-                return await contract.nftAttributes(index)
-            })
-            console.log(charactersMeta)
-            dispatch(setuserCharacters(charactersMeta.map(item => formatCharacterData(item))))
+            const indices = await contract.getCharacters()
+            const charactersMeta = await Promise.allSettled(
+                indices.map(async (index) =>
+                    await contract.nftAttributes(index)
+                )
+            )
+            dispatch(setuserCharacters(charactersMeta.map(item => formatCharacterData(item.value))))
         }
         getUserCharacters()
     }, [currentAccount, ifUserHasNft])
@@ -60,30 +59,15 @@ const SelectCharacter = () => {
             dispatch(setIfuserHasNft(true))
     }
 
-
-    const renderDefaultCharacters = () => {
-        if (!ifUserHasNft) {
-            return defaultCharacters.map((item, index) =>
-                <Profile info={item} key={index} />)
-        }
-    }
-
-    const renderUserCharacters = () => {
-        userCharacters.map((item, index) =>
-            <Profile info={item} key={index} />)
-    }
-
-
-
     return (
         <SelectCharacterWarapper>
             <div className="select-character-container">
                 <h2>Mint Your Hero. Choose wisely.</h2>
                 <div className="character-grid">
                     {
-                        ifUserHasNft ?
-                            renderUserCharacters() :
-                            renderDefaultCharacters()
+                        (!ifUserHasNft && defaultCharacters) &&
+                        defaultCharacters.map((item, index) =>
+                            <Profile info={item} hasNft={ifUserHasNft} key={index} />)
                     }
                 </div>
 

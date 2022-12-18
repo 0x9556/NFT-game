@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import React, { memo, useEffect } from 'react'
 import { useContract } from '../../hooks/useContract'
 import { ProfileWrapper } from './style'
 const Profile = memo(({ info }) => {
@@ -10,6 +10,7 @@ const Profile = memo(({ info }) => {
             console.log(contract)
             let tx = await contract.createCharacter(index)
             await tx.wait()
+            console.log(tx)
         } catch (error) {
             console.log(error)
         }
@@ -22,11 +23,13 @@ const Profile = memo(({ info }) => {
                     <p>{info.name}</p>
                 </div>
                 <img src={info.imgURI} alt={info.name} />
-                <button
-                    type="button"
-                    className="character-mint-button"
-                    onClick={() => mintCharacterNFT(info.characterIndex)}
-                >{`Mint ${info.name}`}</button>
+                {
+                    <button
+                        type="button"
+                        className="character-mint-button"
+                        onClick={() => mintCharacterNFT(info.characterIndex)}
+                    >{`Mint ${info.name}`}</button>
+                }
             </div>
         </ProfileWrapper>
     )

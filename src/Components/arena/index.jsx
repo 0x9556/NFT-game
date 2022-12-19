@@ -1,31 +1,21 @@
 import React, { memo, useEffect, useState } from 'react'
 import { shallowEqual, useDispatch, useSelector } from 'react-redux'
-import { setCurrentBoss, setCurrentCharacterIndex } from '../../store'
+import { setCurrentCharacterIndex } from '../../store'
 import { useContract } from '../../hooks/useContract'
-import { formateBossData, formatCharacterData } from '../../utils/formatCharacterData'
 import { ArenaWrapper } from './style'
 import LoadingIndicator from '../loadingIndicator'
+import { useBoss, useCharacter } from '../../hooks/useMetaData'
 
 
 const Arena = memo(() => {
-
   const contract = useContract()
-  const dispatch = useDispatch()
-  const [attackState, setAttackState] = useState("fulfilled")
+  const [attackComplete, setAttackComplete] = useState("edle")
   const currentCharacterIndex = useSelector(state => state.currentCharacterIndex)
   const currentAccount = useSelector(state => state.currentAccount)
-  const userCharacters = useSelector(state => state.userCharacters, shallowEqual)
-  const currentBoss = useSelector(state => state.currentBoss, shallowEqual)
-  // const [showToast, setShowToast] = useState(false)
-  useEffect(() => {
-    const fetchBoss = async () => {
-      const currentBossMeta = await contract.getCurrentBoss()
-      const currentBoss = formateBossData(currentBossMeta)
-      dispatch(setCurrentBoss(currentBoss))
-    }
-    fetchBoss()
-  }, [attackState])
+  const userCharacterIndices = useSelector(state => state.userCharacterIndices, shallowEqual)
+  const currentBoss = useBoss(attackComplete)
 
+  // const [showToast, setShowToast] = useState(false)
   useEffect(() => {
     contract.on("AttackComplete", onAttackComplete)
     return () => {
@@ -36,18 +26,17 @@ const Arena = memo(() => {
   const attack = async () => {
     try {
       if (currentCharacterIndex) {
-        setAttackState("pending")
+        setAttackComplete("pending")
         let tx = await contract.attackBoss(currentCharacterIndex)
         await tx.wait()
-        setAttackState("fulfilled")
+        setAttackComplete("fulfilled")
       } else {
         alert("please select a character")
       }
     } catch (error) {
-      setAttackState("rejected")
+      setAttackComplete("rejected")
       console.warn(error)
     }
-
   }
 
   const onAttackComplete = (from, characterIndex, newcharacterHp, bossIndex, newbossHp) => {
@@ -56,13 +45,13 @@ const Arena = memo(() => {
     const sender = from.toString();
 
     if (currentAccount === sender.toLowerCase()) {
-      setAttackState("edle")
+
       console.log(`AttackComplete: Boss Hp: ${bossHp} Player Hp: ${playerHp}`)
     }
   }
 
   return (
-    userCharacters &&
+    userCharacterIndices.length &&
     <ArenaWrapper>
       <div className="arena-container">
         {/* {currentBoss && userCharacters && (
@@ -87,7 +76,7 @@ const Arena = memo(() => {
                 {`💥 Attack ${currentBoss.name}`}
               </button>
             </div>
-            {attackState === 'pending' && (
+            {(attackComplete === "pending") && (
               <div className="loading-indicator">
                 <LoadingIndicator />
                 <p>Attacking ⚔️</p>
@@ -97,10 +86,10 @@ const Arena = memo(() => {
         )}
 
         {
-          userCharacters.map(characterTokenId =>
+          userCharacterIndices.map(characterTokenId =>
             <SelectCharacter
               characterTokenId={characterTokenId}
-              attackState={attackState}
+              attackComplete={attackComplete}
               key={characterTokenId} />
           )
         }
@@ -110,18 +99,10 @@ const Arena = memo(() => {
   )
 })
 
-const SelectCharacter = memo(({ characterTokenId ,attackState}) => {
+const SelectCharacter = memo(({ characterTokenId, attackComplete }) => {
 
-  const contract = useContract()
   const dispatch = useDispatch()
-  const [characterAttibutes, setCharacterAttibutes] = useState(undefined)
-  useEffect(() => {
-    const fetchCharacterAttributes = async () => {
-      const characterAttibutes = await contract.nftAttributes(characterTokenId)
-      setCharacterAttibutes(formatCharacterData(characterAttibutes))
-    }
-    fetchCharacterAttributes()
-  }, [attackState])
+  const characterAttibutes = useCharacter(characterTokenId, attackComplete)
 
   return (
     characterAttibutes &&
@@ -134,7 +115,10 @@ const SelectCharacter = memo(({ characterTokenId ,attackState}) => {
             <img
               src={characterAttibutes.imgURI}
               alt={`Character ${characterAttibutes.name}`}
-              onClick={() => { dispatch(setCurrentCharacterIndex(characterTokenId)) }}
+              onClick={() => {
+                dispatch(setCurrentCharacterIndex(characterTokenId))
+                console.log("You choose", characterAttibutes.name)
+              }}
             />
             <div className="health-bar">
               <progress value={characterAttibutes.hp} max={characterAttibutes.maxHp} />

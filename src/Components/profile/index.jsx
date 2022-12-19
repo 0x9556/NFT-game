@@ -1,9 +1,9 @@
 import React, { memo, useState } from 'react'
-import { useContract } from '../../hooks/useContract'
+import { useGameContract } from '../../hooks/useContract'
 import { ProfileWrapper } from './style'
 const Profile = memo(({ info }) => {
 
-    const contract = useContract()
+    const contract = useGameContract()
     const [mintingCharacter, setMintingCharacter] = useState(false)
 
     const mintCharacterNFT = async (index) => {

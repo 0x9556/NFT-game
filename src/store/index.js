@@ -9,7 +9,7 @@ const slice = createSlice({
         currentBoss: undefined,
         currentCharacterIndex: undefined,
         defaultCharacters: undefined,
-        userCharacters: undefined,
+        userCharacterIndices: undefined,
     },
     reducers: {
         setCurrentAccount: (state, action) => {
@@ -21,8 +21,8 @@ const slice = createSlice({
         setDefaultCharacters: (state, action) => {
             state.defaultCharacters = action.payload
         },
-        setuserCharacters: (state, action) => {
-            state.userCharacters = action.payload
+        setuserCharacterIndices: (state, action) => {
+            state.userCharacterIndices = action.payload
         },
         setCurrentBoss: (state, action) => {
             state.currentBoss = action.payload
@@ -40,7 +40,7 @@ export const {
     setCurrentAccount,
     setIfuserHasNft,
     setDefaultCharacters,
-    setuserCharacters,
+    setuserCharacterIndices,
     setCurrentBoss,
     setCurrentCharacterIndex
 } = slice.actions

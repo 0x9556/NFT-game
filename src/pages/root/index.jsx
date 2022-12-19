@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setCurrentAccount, setIfuserHasNft } from '../../store'
 import { RootWrapper } from './style'
-import { useContract } from '../../hooks/useContract'
+import { useGameContract } from '../../hooks/useContract'
 import LoadingIndicator from '../../Components/loadingIndicator'
 import ConnectWallet from '../../Components/connect-wallet'
 import SelectCharacter from '../../Components/select-character'
@@ -13,7 +13,7 @@ export default function Root() {
   const currentAccount = useSelector(state => state.currentAccount)
   const userHasNft = useSelector(state => state.ifUserHasNft)
   const dispatch = useDispatch()
-  const contract = useContract()
+  const contract = useGameContract()
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {

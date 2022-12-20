@@ -8,6 +8,7 @@ import ConnectWallet from '../../Components/connect-wallet'
 import SelectCharacter from '../../Components/select-character'
 import Arena from '../../Components/arena'
 
+
 export default function Root() {
 
   const currentAccount = useSelector(state => state.currentAccount)
@@ -15,6 +16,8 @@ export default function Root() {
   const dispatch = useDispatch()
   const contract = useGameContract()
   const [isLoading, setIsLoading] = useState(false)
+
+
 
   useEffect(() => {
     const checkIfWalletConnect = async () => {

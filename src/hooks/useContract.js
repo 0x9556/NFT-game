@@ -1,8 +1,10 @@
+
 import { useMemo } from 'react'
 import { getContract } from '../utils/'
 import { CONTRACT_ADDRESS } from '../utils/constants'
 import { abi } from '../utils/MyNftGame.json'
-import { useWeb3React} from '@web3-react/core'
+import { useWeb3React } from '@web3-react/core'
+
 
 // export function useContract() {
 //     const provider = useWeb3Provider()
@@ -12,10 +14,12 @@ import { useWeb3React} from '@web3-react/core'
 //     }, [provider])
 // }
 
+
 export function useContract(addressOrAddressMap, ABI, withSignerIfPossible = true) {
     const { provider, account, chainId } = useWeb3React()
     console.log('provider', provider)
     console.log('account', account)
+    console.log('chainId', chainId)
     return useMemo(() => {
         if (!addressOrAddressMap) return null
         let address

@@ -8,7 +8,7 @@ import { store } from './store'
 import router from './router'
 import './index.css'
 
-function getWeb3Provider(provider) {
+function getWeb3Provider(provider,connector) {
     return new providers.Web3Provider(provider)
 }
 

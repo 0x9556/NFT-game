@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { setCurrentAccount, setIfuserHasNft } from '../../store'
+import { useWeb3React } from '@web3-react/core'
+import { useStore } from '../../state'
 import { RootWrapper } from './style'
 import { useGameContract } from '../../hooks/useContract'
 import LoadingIndicator from '../../Components/loadingIndicator'
@@ -10,26 +10,16 @@ import Arena from '../../Components/arena'
 
 
 export default function Root() {
-
-  const currentAccount = useSelector(state => state.currentAccount)
-  const userHasNft = useSelector(state => state.ifUserHasNft)
-  const dispatch = useDispatch()
   const contract = useGameContract()
   const [isLoading, setIsLoading] = useState(false)
-
+  const [userHasNft, setIfuserHasNft] = useStore(state => [state.ifUserHasNft, state.setIfuserHasNft])
+  const { account, connector } = useWeb3React()
 
 
   useEffect(() => {
     const checkIfWalletConnect = async () => {
-      const { ethereum } = window
-      if (ethereum) {
-        const currentAccount = await ethereum.request({
-          method: "eth_accounts"
-        })
-        if (currentAccount.length !== 0)
-          dispatch(setCurrentAccount(currentAccount[0]))
-        setIsLoading(false)
-      }
+      await connector.connectEagerly()
+      setIsLoading(false)
     }
     setIsLoading(true)
     checkIfWalletConnect()
@@ -37,24 +27,24 @@ export default function Root() {
 
   useEffect(() => {
     const checkIfUserHasNft = async () => {
-      if (currentAccount) {
-        const ifHasNft = await contract.checkIfUserHasNft(currentAccount)
-        dispatch(setIfuserHasNft(ifHasNft))
+      if (account) {
+        const ifHasNft = await contract.checkIfUserHasNft(account)
+        setIfuserHasNft(ifHasNft)
       }
     }
     checkIfUserHasNft()
-  }, [currentAccount])
+  }, [account])
 
   const renderContent = () => {
     if (isLoading)
       <LoadingIndicator />
-    if (!currentAccount)
+    if (!account)
       return <ConnectWallet />
 
-    if (currentAccount && !userHasNft)
+    if (account && !userHasNft)
       return <SelectCharacter />
 
-    if (currentAccount && userHasNft)
+    if (account && userHasNft)
       return <Arena />
   }
 

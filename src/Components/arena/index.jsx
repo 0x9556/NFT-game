@@ -5,14 +5,16 @@ import { useContract } from '../../hooks/useContract'
 import { ArenaWrapper } from './style'
 import LoadingIndicator from '../loadingIndicator'
 import { useBoss, useCharacter } from '../../hooks/useMetaData'
+import { useStore } from '../../state'
+import { useWeb3React } from '@web3-react/core'
 
 
 const Arena = memo(() => {
   const contract = useContract()
   const [attackComplete, setAttackComplete] = useState("edle")
-  const currentCharacterIndex = useSelector(state => state.currentCharacterIndex)
-  const currentAccount = useSelector(state => state.currentAccount)
-  const userCharacterIndices = useSelector(state => state.userCharacterIndices, shallowEqual)
+  const currentCharacterIndex = useStore(state => state.currentCharacterIndex)
+  const { account } = useWeb3React()
+  const userCharacterIndices = useStore(state => state.userCharacterIndices, shallowEqual)
   const currentBoss = useBoss(attackComplete)
 
   // const [showToast, setShowToast] = useState(false)
@@ -44,7 +46,7 @@ const Arena = memo(() => {
     const playerHp = newcharacterHp.toNumber();
     const sender = from.toString();
 
-    if (currentAccount === sender.toLowerCase()) {
+    if (account === sender.toLowerCase()) {
 
       console.log(`AttackComplete: Boss Hp: ${bossHp} Player Hp: ${playerHp}`)
     }

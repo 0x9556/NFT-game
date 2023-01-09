@@ -17,9 +17,7 @@ import { useWeb3React } from '@web3-react/core'
 
 export function useContract(addressOrAddressMap, ABI, withSignerIfPossible = true) {
     const { provider, account, chainId } = useWeb3React()
-    console.log('provider', provider)
-    console.log('account', account)
-    console.log('chainId', chainId)
+
     return useMemo(() => {
         if (!addressOrAddressMap) return null
         let address
